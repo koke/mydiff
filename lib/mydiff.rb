@@ -3,7 +3,7 @@ class MyDiff
   attr_accessor :my
   
   def initialize(config)
-    @my = my = Mysql::new(config[:host], config[:user], config[:password])
+    @my = Mysql::new(config[:host], config[:user], config[:password])
     @newdb = "#{config[:prefix]}_new"
     @olddb = "#{config[:prefix]}_old"  
   end
@@ -42,7 +42,51 @@ class MyDiff
     ntables = list_tables(@newdb)
     otables = list_tables(@olddb)
     
-    ntables.select {|t| otables.include?(t) }
+    ntables.select {|t| otables.include?(t) and table_changed?(t) }
   end
   
+  def new_rows(table)
+    fields = fields_from(table)
+    pkey, fields = fields.partition {|f| f["Key"] == "PRI" }
+    
+    query = "SELECT "
+    query << pkey.collect do |f|
+      "n.#{f["Field"]}"
+    end.join(",")
+    query << ","
+    query << fields.collect do |f|
+      "n.#{f["Field"]},o.#{f["Field"]}"
+    end.join(",")
+    
+    query << " FROM #{@newdb}.#{table} AS n LEFT JOIN #{@olddb}.#{table} AS o ON "
+    query << pkey.collect do |f|
+      "n.#{f["Field"]} = o.#{f["Field"]}"
+    end.join(" AND ")
+    query << " WHERE "
+    query << pkey.collect do |f|
+      "o.#{f["Field"]} IS NULL"
+    end.join(" AND ")
+    
+    query
+  end
+  
+  def fields_from(table)
+    @my.select_db(@newdb)
+    res = @my.query("DESCRIBE #{table}")
+    fields = []
+    while (field = res.fetch_hash)
+      fields << field
+    end
+    
+    fields
+  end  
+  
+  def checksum_table(db, table)
+    @my.select_db(db)
+    @my.query("CHECKSUM TABLE #{table}").fetch_row[1]
+  end
+  
+  def table_changed?(table)
+    checksum_table(@olddb, table) != checksum_table(@newdb, table)
+  end
 end
