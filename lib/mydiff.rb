@@ -52,7 +52,7 @@ class MyDiff
     
     query = "SELECT "
     query << pkey.collect do |f|
-      "n.#{f["Field"]} n_#{f["Field"]}"
+      "n.#{f["Field"]} #{f["Field"]}"
     end.join(",")
     query << ","
     query << fields.collect do |f|
@@ -74,6 +74,37 @@ class MyDiff
       new_rows << row
     end
     new_rows
+  end
+
+  def deleted_rows(table)
+    fields = fields_from(table)
+    pkey, fields = extract_pkey_from(fields)
+    my.select_db(@olddb)
+    
+    query = "SELECT "
+    query << pkey.collect do |f|
+      "o.#{f["Field"]} #{f["Field"]}"
+    end.join(",")
+    query << ","
+    query << fields.collect do |f|
+      "o.#{f["Field"]} o_#{f["Field"]}"
+    end.join(",")
+    
+    query << " FROM #{@olddb}.#{table} AS o LEFT JOIN #{@newdb}.#{table} AS n ON "
+    query << pkey.collect do |f|
+      "n.#{f["Field"]} = o.#{f["Field"]}"
+    end.join(" AND ")
+    query << " WHERE "
+    query << pkey.collect do |f|
+      "n.#{f["Field"]} IS NULL"
+    end.join(" AND ")
+    
+    result = my.query(query)
+    deleted_rows = []
+    while row = result.fetch_hash
+      deleted_rows << row
+    end
+    deleted_rows
   end
   
   def fields_from(table)
