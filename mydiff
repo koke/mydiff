@@ -5,7 +5,6 @@ if File.directory?("lib")
 end
 
 require "rubygems"
-require "vendor/mysql"
 require "mydiff"
 
 config = {
@@ -22,6 +21,9 @@ popt = config[:password].nil? ? "" : "-p#{config[:password]}"
 system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.newdb} < new.sql"
 system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.olddb} < old.sql"
 
+md.cli.main_menu
+
+exit
 puts "New tables"
 puts md.new_tables.join("\n")
 

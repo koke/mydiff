@@ -1,13 +1,18 @@
+$:.unshift File.dirname(__FILE__) 
+ 
+require "mysql"
 require "mydiff/cli"
 
 class MyDiff
   attr_accessor :newdb, :olddb
-  attr_accessor :my
-  
+  attr_accessor :my, :cli
+    
   def initialize(config)
     @my = Mysql::new(config[:host], config[:user], config[:password])
     @newdb = "#{config[:prefix]}_new"
     @olddb = "#{config[:prefix]}_old"  
+    @cli = CLI.new(self)
+    @fields = {}
   end
   
   def prepare!
@@ -20,7 +25,7 @@ class MyDiff
     @my.query("CREATE DATABASE #{@newdb}")
     @my.query("CREATE DATABASE #{@olddb}")
   end
-  
+    
   def list_tables(db)
     @my.select_db(db)
     @my.list_tables
@@ -151,6 +156,12 @@ class MyDiff
     
     @fields[table] ||= fields
   end  
+  
+  def count_rows(db, table)
+    @my.select_db(db)
+    res = @my.query("SELECT COUNT(*) FROM #{table}")
+    res.fetch_row[0]
+  end
   
   def extract_pkey_from(fields)
     fields.partition {|f| f["Key"] == "PRI" }    
