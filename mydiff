@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+if File.directory?("lib")
+  $: << "lib"
+end
+
+require "rubygems"
+require "vendor/mysql"
+require "mydiff"
+
+config = {
+  :host => "localhost",
+  :user => "root",
+  :password => nil,
+  :prefix => "mydiff"
+}
+
+md = MyDiff.new(config)
+md.prepare!
+
+popt = config[:password].nil? ? "" : "-p#{config[:password]}"
+system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.newdb} < new.sql"
+system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.olddb} < old.sql"
+
+
+
