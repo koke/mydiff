@@ -106,6 +106,33 @@ class MyDiff
     end
     deleted_rows
   end
+
+  def changed_rows(table)
+    fields = fields_from(table)
+    pkey, fields = extract_pkey_from(fields)
+    my.select_db(@olddb)
+    
+    query = "SELECT "
+    query << pkey.collect do |f|
+      "o.#{f["Field"]} #{f["Field"]}"
+    end.join(",")
+    query << ","
+    query << fields.collect do |f|
+      "o.#{f["Field"]} o_#{f["Field"]}, n.#{f["Field"]} n_#{f["Field"]}"
+    end.join(",")
+    
+    query << " FROM #{@olddb}.#{table} AS o INNER JOIN #{@newdb}.#{table} AS n ON "
+    query << pkey.collect do |f|
+      "n.#{f["Field"]} = o.#{f["Field"]}"
+    end.join(" AND ")    
+    
+    result = my.query(query)
+    changed_rows = []
+    while row = result.fetch_hash
+      changed_rows << row
+    end
+    changed_rows
+  end
   
   def fields_from(table)
     @my.select_db(@newdb)
