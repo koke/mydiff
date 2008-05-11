@@ -31,4 +31,19 @@ puts md.dropped_tables.join("\n")
 
 puts "\n"
 puts "Changed tables"
-puts md.changed_tables.join("\n")
+# puts md.changed_tables.join("\n")
+md.changed_tables.each do |table|
+  puts "#{table}\n\n"
+  puts "New rows"
+  md.new_rows(table).each do |row|
+    puts row.values.join("||")
+  end
+  puts "Deleted rows"
+  md.deleted_rows(table).each do |row|
+    puts row.values.join("||")
+  end
+  puts "Changed rows"
+  md.changed_rows(table).each do |row|
+    puts row.values.join("||")
+  end
+end

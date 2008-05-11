@@ -1,3 +1,5 @@
+require "mydiff/cli"
+
 class MyDiff
   attr_accessor :newdb, :olddb
   attr_accessor :my
@@ -131,10 +133,15 @@ class MyDiff
     while row = result.fetch_hash
       changed_rows << row
     end
-    changed_rows
+    changed_rows.select do |row|
+      fields.inject(true) do |s,f|
+        s and row["o_#{f["Field"]}"] = row["n_#{f["Field"]}"]
+      end
+    end
   end
   
   def fields_from(table)
+    return @fields[table] if @fields[table]
     @my.select_db(@newdb)
     res = @my.query("DESCRIBE #{table}")
     fields = []
@@ -142,7 +149,7 @@ class MyDiff
       fields << field
     end
     
-    fields
+    @fields[table] ||= fields
   end  
   
   def extract_pkey_from(fields)
