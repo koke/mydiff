@@ -47,15 +47,16 @@ class MyDiff
   
   def new_rows(table)
     fields = fields_from(table)
-    pkey, fields = fields.partition {|f| f["Key"] == "PRI" }
+    pkey, fields = extract_pkey_from(fields)
+    my.select_db(@newdb)
     
     query = "SELECT "
     query << pkey.collect do |f|
-      "n.#{f["Field"]}"
+      "n.#{f["Field"]} n_#{f["Field"]}"
     end.join(",")
     query << ","
     query << fields.collect do |f|
-      "n.#{f["Field"]},o.#{f["Field"]}"
+      "n.#{f["Field"]} n_#{f["Field"]}"
     end.join(",")
     
     query << " FROM #{@newdb}.#{table} AS n LEFT JOIN #{@olddb}.#{table} AS o ON "
@@ -67,7 +68,12 @@ class MyDiff
       "o.#{f["Field"]} IS NULL"
     end.join(" AND ")
     
-    query
+    result = my.query(query)
+    new_rows = []
+    while row = result.fetch_hash
+      new_rows << row
+    end
+    new_rows
   end
   
   def fields_from(table)
@@ -80,6 +86,10 @@ class MyDiff
     
     fields
   end  
+  
+  def extract_pkey_from(fields)
+    fields.partition {|f| f["Key"] == "PRI" }    
+  end
   
   def checksum_table(db, table)
     @my.select_db(db)
