@@ -5,9 +5,24 @@ require "mydiff/cli"
 require "mydiff/change"
 
 # MyDiff helps you to apply changes from one MySQL database to another
+#
+# It has some helper methods to 
+#
+# Example
+#
+#  md = MyDiff.new(:host => "localhost", :user => "root", :newdb => "mydiff_new", :olddb => "mydiff_old") # => <MyDiff>
+#  md.newdb           #=> "mydiff_new"
+#  md.olddb           #=> "mydiff_old"
+#  md.new_tables      #=> ["new_table1", "new_table2"]
+#  md.dropped_tables  #=> ["old_table"]
 class MyDiff
-  attr_accessor :newdb, :olddb
-  attr_accessor :my, :cli
+  # Name of the database with changes
+  attr_accessor :newdb
+  # Name of the current database. Changes will be applied here
+  attr_accessor :olddb
+  # Command Line Interface. See MyDiff::CLI
+  attr_accessor :cli
+  attr_accessor :my #:nodoc:
   
   # Creates a new MyDiff instance
   #
@@ -21,8 +36,8 @@ class MyDiff
   # Returns MyDiff
   def initialize(config)
     @my = Mysql::new(config[:host], config[:user], config[:password])
-    @newdb = "#{config[:prefix]}_new"
-    @olddb = "#{config[:prefix]}_old"  
+    @newdb = config[:newdb]
+    @olddb = config[:olddb]
     @cli = CLI.new(self)
     @fields = {}
   end
@@ -33,12 +48,10 @@ class MyDiff
   def prepare!
     begin
       @my.query("DROP DATABASE #{@newdb}")
-      # @my.query("DROP DATABASE #{@olddb}")
     rescue
     end
 
     @my.query("CREATE DATABASE #{@newdb}")
-    # @my.query("CREATE DATABASE #{@olddb}")
   end
     
   # Returns an array with table names for the database given in +db+
@@ -72,6 +85,7 @@ class MyDiff
     ntables.select {|t| otables.include?(t) and table_changed?(t) }
   end
   
+  # Returns an array with rows present in +newdb+ but not in +olddb+, using the +table+ given
   def new_rows(table)
     fields = fields_from(table)
     pkey, fields = extract_pkey_from(fields)
