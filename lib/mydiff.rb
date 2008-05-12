@@ -2,6 +2,7 @@ $:.unshift File.dirname(__FILE__)
  
 require "mysql"
 require "mydiff/cli"
+require "mydiff/change"
 
 class MyDiff
   attr_accessor :newdb, :olddb
@@ -140,7 +141,7 @@ class MyDiff
     end
     changed_rows.select do |row|
       fields.inject(true) do |s,f|
-        s and row["o_#{f["Field"]}"] = row["n_#{f["Field"]}"]
+        s and row["o_#{f["Field"]}"] == row["n_#{f["Field"]}"]
       end
     end
   end
@@ -167,6 +168,14 @@ class MyDiff
     fields.partition {|f| f["Key"] == "PRI" }    
   end
   
+  def pkey_of(table)
+    fields_from(table).select {|f| f["Key"] == "PRI"}.map {|f| f["Field"]}
+  end
+
+  def data_fields_of(table)
+    fields_from(table).select {|f| f["Key"] != "PRI"}.map {|f| f["Field"]}
+  end
+  
   def checksum_table(db, table)
     @my.select_db(db)
     @my.query("CHECKSUM TABLE #{table}").fetch_row[1]
@@ -175,4 +184,12 @@ class MyDiff
   def table_changed?(table)
     checksum_table(@olddb, table) != checksum_table(@newdb, table)
   end
+  
+  def select_new
+    @my.select_db(@newdb)
+  end
+  
+  def select_old
+    @my.select_db(@olddb)
+  end  
 end
