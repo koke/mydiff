@@ -4,10 +4,21 @@ require "mysql"
 require "mydiff/cli"
 require "mydiff/change"
 
+# MyDiff helps you to apply changes from one MySQL database to another
 class MyDiff
   attr_accessor :newdb, :olddb
   attr_accessor :my, :cli
-    
+  
+  # Creates a new MyDiff instance
+  #
+  # Config options
+  # - <tt>:host</tt> - MySQL host
+  # - <tt>:user</tt> - MySQL user
+  # - <tt>:password</tt> - MySQL password
+  # - <tt>:newdb</tt> - Name of the database with the changes to apply
+  # - <tt>:olddb</tt> - Name of the database to apply the changes
+  #
+  # Returns MyDiff
   def initialize(config)
     @my = Mysql::new(config[:host], config[:user], config[:password])
     @newdb = "#{config[:prefix]}_new"
@@ -16,22 +27,27 @@ class MyDiff
     @fields = {}
   end
   
+  # Recreates the new database
+  # 
+  # *WARNING*: This method drops and recreates the +newdb+ database, you may lose data!
   def prepare!
     begin
       @my.query("DROP DATABASE #{@newdb}")
-      @my.query("DROP DATABASE #{@olddb}")
+      # @my.query("DROP DATABASE #{@olddb}")
     rescue
     end
 
     @my.query("CREATE DATABASE #{@newdb}")
-    @my.query("CREATE DATABASE #{@olddb}")
+    # @my.query("CREATE DATABASE #{@olddb}")
   end
     
+  # Returns an array with table names for the database given in +db+
   def list_tables(db)
     @my.select_db(db)
     @my.list_tables
   end
   
+  # Returns an array with table names present on +newdb+ but not on +olddb+
   def new_tables
     ntables = list_tables(@newdb)
     otables = list_tables(@olddb)
@@ -39,6 +55,7 @@ class MyDiff
     ntables.select {|t| not otables.include?(t) }
   end
   
+  # Returns an array with table names present on +olddb+ but not on +newdb+
   def dropped_tables
     ntables = list_tables(@newdb)
     otables = list_tables(@olddb)
@@ -46,6 +63,8 @@ class MyDiff
     otables.select {|t| not ntables.include?(t) }
   end
   
+  # Returns an array with table names present on +newdb+ and +olddb+ which 
+  # are different in content
   def changed_tables
     ntables = list_tables(@newdb)
     otables = list_tables(@olddb)
