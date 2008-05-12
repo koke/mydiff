@@ -16,17 +16,20 @@ class MyDiff
     
     def main_menu
       continue = true
-      while continue
-        choose do |menu|
-          menu.prompt = "What now?"
+      begin
+        while continue
+          choose do |menu|
+            menu.prompt = "What now?"
           
-          menu.choice("Status") { status }
-          menu.choice("Accept") { accept }
-          menu.choice("Reject") { reject }
-          menu.choice("Patch")  { patch  }
-          menu.choice("Apply")  { apply! }
-          menu.choice("Quit")   { continue = false }
+            menu.choice("Status") { status }
+            menu.choice("Accept") { accept }
+            menu.choice("Reject") { reject }
+            menu.choice("Patch")  { patch  }
+            menu.choice("Apply")  { apply! }
+            menu.choice("Quit")   { continue = false }
+          end
         end
+      rescue Interrupt
       end
     end
     
