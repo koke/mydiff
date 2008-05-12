@@ -6,48 +6,56 @@ end
 
 require "rubygems"
 require "mydiff"
+require "optparse"
+
 
 $DEBUG = false
 
 config = {
   :host => "localhost",
   :user => "root",
-  :password => nil,
-  :prefix => "mydiff"
+  :password => nil
 }
 
+opts = OptionParser.new do |opts|
+  opts.banner = "Usage: #{__FILE__} [options] -o OLDDB -n NEWDB"
+
+  opts.on("-d", "--debug", "Show debug messages") do |v|
+    $DEBUG = v
+  end
+  
+  opts.on("-o", "--olddb OLDDB", "Database to apply changes") do |o|
+    config[:olddb] = o
+  end
+
+  opts.on("-n", "--newdb NEWDB", "Database to read changes") do |n|
+    config[:newdb] = n
+  end
+  
+  opts.on("-h", "--host name", "MySQL host to connect (default #{config[:host]})") do |o|
+    config[:host] = o
+  end
+  
+  opts.on("-u", "--user name", "MySQL username (default #{config[:user]})") do |o|
+    config[:user] = o
+  end
+  
+  opts.on("-p", "--password passwd", "MySQL password") do |o|
+    config[:password] = o
+  end
+  
+end
+
+opts.parse!
+
+unless config[:newdb] and config[:olddb]
+  puts opts.help
+  exit 1
+end
+
 md = MyDiff.new(config)
-md.prepare!
-
-popt = config[:password].nil? ? "" : "-p#{config[:password]}"
-system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.newdb} < new.sql"
-system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.olddb} < old.sql"
-
 md.cli.main_menu
 
-exit
-puts "New tables"
-puts md.new_tables.join("\n")
-
-puts "\n"
-puts "Dropped tables"
-puts md.dropped_tables.join("\n")
-
-puts "\n"
-puts "Changed tables"
-# puts md.changed_tables.join("\n")
-md.changed_tables.each do |table|
-  puts "#{table}\n\n"
-  puts "New rows"
-  md.new_rows(table).each do |row|
-    puts row.values.join("||")
-  end
-  puts "Deleted rows"
-  md.deleted_rows(table).each do |row|
-    puts row.values.join("||")
-  end
-  puts "Changed rows"
-  md.changed_rows(table).each do |row|
-    puts row.values.join("||")
-  end
-end
+# popt = config[:password].nil? ? "" : "-p#{config[:password]}"
+# system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.newdb} < new.sql"
+# system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.olddb} < old.sql"
