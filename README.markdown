@@ -1,3 +1,0 @@
-## mydiff - MySQL diff library
-
-**WARNING** Although this code is public, it's not complete yet.
