@@ -1,0 +1,10 @@
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+bin/mydiff
+lib/mydiff/change.rb
+lib/mydiff/cli.rb
+lib/mydiff.rb
+test/helper.rb
+test/test_mydiff.rb

@@ -2,18 +2,19 @@ require 'rubygems'
 require "rake/gempackagetask"
 require "rake/rdoctask"
 require "rake/testtask"
+require 'hoe'
 require './lib/mydiff.rb'
 
-Rake::TestTask.new do |t|
-  t.libs << "test"
-  t.test_files = FileList['test/test*.rb']
-  t.verbose = true
-end
-
-Rake::RDocTask.new do |rd|
-  rd.main = "README.rdoc"
-  rd.rdoc_files.include("README.rdoc", "lib/**/*.rb")
-  rd.rdoc_dir = "doc"
+Hoe.new('mydiff', MyDiff::VERSION) do |p|
+  p.author = 'Jorge Bernal'
+  p.email = 'jbernal@warp.es'
+  p.summary = 'MySQL diff library'
+  p.description = p.paragraphs_of('README.txt', 2..2).join("\n\n")
+  p.url = p.paragraphs_of('README.txt', 1).first
+  p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
+  p.extra_deps << ['mysql','>= 2.7']
+  p.extra_deps << ['highline', '>= 1.4.0']
+  p.remote_rdoc_dir = ''
 end
 
 desc "Open an irb session preloaded with this library"

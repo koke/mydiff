@@ -16,6 +16,8 @@ require "mydiff/change"
 #  md.new_tables      #=> ["new_table1", "new_table2"]
 #  md.dropped_tables  #=> ["old_table"]
 class MyDiff
+  VERSION = '0.0.1'
+  
   # Name of the database with changes
   attr_accessor :newdb
   # Name of the current database. Changes will be applied here

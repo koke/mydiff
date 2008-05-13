@@ -1,0 +1,4 @@
+=== 0.0.1 / 2008-05-13
+
+* First public ALPHA release
+
