@@ -18,7 +18,7 @@ config = {
 }
 
 opts = OptionParser.new do |opts|
-  opts.banner = "Usage: #{__FILE__} [options] -o OLDDB -n NEWDB"
+  opts.banner = "Usage: #{File.basename(__FILE__)} [options] -o OLDDB -n NEWDB"
 
   opts.on("-d", "--debug", "Show debug messages") do |v|
     $DEBUG = v
