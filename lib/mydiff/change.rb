@@ -45,7 +45,11 @@ class MyDiff
       if @type.eql?(:new)
         puts "** Creating #{@table}"
         @md.select_old
-        @md.my.query("CREATE TABLE #{@table} LIKE #{@md.newdb}.#{@table}")
+        if @md.new_tables.include?(@table)
+          @md.my.query("CREATE TABLE #{@table} LIKE #{@md.newdb}.#{@table}")
+        else
+          @md.my.query("TRUNCATE TABLE #{@table}")
+        end
         @md.my.query("INSERT INTO #{@table} SELECT * FROM #{@md.newdb}.#{@table}")
       elsif @type.eql?(:drop)
         puts "** Dropping table #{@table}"

@@ -48,7 +48,7 @@ class MyDiff
         if change #and change.type.eql?(:patch)
           @changes.delete(table[:table])
         end
-        @changes[table[:table]] = Change.new(@md, :add, table[:table])
+        @changes[table[:table]] = Change.new(@md, :new, table[:table])
       end
     end
 
