@@ -14,6 +14,7 @@ Hoe.new('mydiff', MyDiff::VERSION) do |p|
   p.changes = p.paragraphs_of('History.txt', 0..1).join("\n\n")
   p.extra_deps << ['mysql','>= 2.7']
   p.extra_deps << ['highline', '>= 1.4.0']
+  p.extra_deps << ['mongrel', '>= 1.1.5']
   p.remote_rdoc_dir = ''
 end
 

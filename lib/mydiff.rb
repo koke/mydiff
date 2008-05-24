@@ -2,6 +2,7 @@ $:.unshift File.dirname(__FILE__)
  
 require "mysql"
 require "mydiff/cli"
+require "mydiff/webui"
 require "mydiff/change"
 
 # MyDiff helps you to apply changes from one MySQL database to another
@@ -22,8 +23,8 @@ class MyDiff
   attr_accessor :newdb
   # Name of the current database. Changes will be applied here
   attr_accessor :olddb
-  # Command Line Interface. See MyDiff::CLI
-  attr_accessor :cli
+  # User Interface. Can be one +cli+ or +web+. See MyDiff::CLI or MyDiff::WebUi
+  attr_accessor :ui
   attr_accessor :my #:nodoc:
   
   # Creates a new MyDiff instance
@@ -34,13 +35,19 @@ class MyDiff
   # - <tt>:password</tt> - MySQL password
   # - <tt>:newdb</tt> - Name of the database with the changes to apply
   # - <tt>:olddb</tt> - Name of the database to apply the changes
+  # - <tt>:gui</tt> - User Interface (web or cli)
   #
   # Returns MyDiff
   def initialize(config)
     @my = Mysql::new(config[:host], config[:user], config[:password])
     @newdb = config[:newdb]
     @olddb = config[:olddb]
-    @cli = CLI.new(self)
+    if config[:gui].eql?("web")
+      @ui = MyDiff::WebUi.new(self)
+      @ui.ui_port = config[:ui_port]
+    elsif config[:gui].eql?("cli")
+      @ui = MyDiff::CLI.new(self)
+    end
     @fields = {}
   end
   

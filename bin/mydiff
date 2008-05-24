@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-if File.directory?("lib")
-  $: << "lib"
+if File.directory?("#{File.dirname(__FILE__)}/../lib")
+  $:.unshift "#{File.dirname(__FILE__)}/../lib"
 end
 
 require "rubygems"
@@ -9,16 +9,18 @@ require "mydiff"
 require "optparse"
 
 
-$DEBUG = false
+$DEBUG = true
 
 config = {
   :host => "localhost",
   :user => "root",
-  :password => nil
+  :password => nil,
+  :gui => "web",
+  :ui_port => "8888"
 }
 
 opts = OptionParser.new do |opts|
-  opts.banner = "Usage: #{File.basename(__FILE__)} [options] -o OLDDB -n NEWDB"
+  opts.banner = "Usage: #{File.basename(__FILE__)} [options] -o OLDDB -n NEWDB "
 
   opts.on("-d", "--debug", "Show debug messages") do |v|
     $DEBUG = v
@@ -44,6 +46,14 @@ opts = OptionParser.new do |opts|
     config[:password] = o
   end
   
+  opts.on("-g", "--gui", "User interface: cli or web (default)") do |o|
+    config[:gui] = o
+  end
+  
+  opts.on("-w", "--web-port port", "Web interface port (default: 4567)") do |o|
+    config[:ui_port] = o
+  end
+  
 end
 
 opts.parse!
@@ -54,7 +64,7 @@ unless config[:newdb] and config[:olddb]
 end
 
 md = MyDiff.new(config)
-md.cli.main_menu
+md.ui.start
 
 # popt = config[:password].nil? ? "" : "-p#{config[:password]}"
 # system "mysql -h #{config[:host]} -u #{config[:user]} #{popt} #{md.newdb} < new.sql"
