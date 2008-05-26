@@ -167,18 +167,22 @@ class MyDiff
     query << " FROM #{@olddb}.#{table} AS o INNER JOIN #{@newdb}.#{table} AS n ON "
     query << pkey.collect do |f|
       "n.#{f["Field"]} = o.#{f["Field"]}"
-    end.join(" AND ")    
+    end.join(" AND ")
+    
+    unless fields.empty?
+      query << " WHERE "
+      query << fields.collect do |f|
+        "n.#{f["Field"]} <> o.#{f["Field"]}"
+      end.join(" OR ")
+    end
     
     result = my.query(query)
     changed_rows = []
     while row = result.fetch_hash
       changed_rows << row
     end
-    changed_rows.select do |row|
-      fields.inject(true) do |s,f|
-        s and row["o_#{f["Field"]}"] == row["n_#{f["Field"]}"]
-      end
-    end
+    
+    changed_rows
   end
   
   def fields_from(table)
